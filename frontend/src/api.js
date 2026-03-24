@@ -1,46 +1,47 @@
-// 🔗 UPDATED: backend URL
-const BASE_URL = "https://truthlens-backend.onrender.com/api";
+const jsonHeaders = {
+  "Content-Type": "application/json",
+};
 
-// Helper function (unchanged)
-async function request(endpoint, options = {}) {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    ...options,
-  });
-
+async function parseResponse(response) {
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || "API request failed");
+    const text = await response.text();
+    throw new Error(text || "Request failed");
   }
-
   return response.json();
 }
 
-// Start session (unchanged)
-export async function startSession(candidateName) {
-  return request("/sessions/start", {
-    method: "POST",
-    body: JSON.stringify({
-      candidate_name: candidateName,
-    }),
-  });
-}
-
-// Get snapshot (unchanged)
-export async function fetchSnapshot(sessionId) {
-  return request(`/sessions/${sessionId}/snapshot`);
-}
-
-// End session (unchanged)
-export async function endSession(sessionId) {
-  return request(`/sessions/${sessionId}/end`, {
-    method: "POST",
-  });
-}
-
-// Dashboard (unchanged)
 export async function fetchDashboard() {
-  return request("/dashboard");
+  const response = await fetch("/api/dashboard");
+  return parseResponse(response);
 }
+
+export async function startSession(candidateName) {
+  const response = await fetch("/api/sessions/start", {
+    method: "POST",
+    headers: jsonHeaders,
+    body: JSON.stringify({ candidate_name: candidateName }),
+  });
+  return parseResponse(response);
+}
+
+export async function fetchSnapshot(sessionId) {
+  const response = await fetch(`/api/sessions/${sessionId}/snapshot`);
+  return parseResponse(response);
+}
+
+export async function updateEnvironment(sessionId, payload) {
+  const response = await fetch(`/api/sessions/${sessionId}/environment`, {
+    method: "POST",
+    headers: jsonHeaders,
+    body: JSON.stringify(payload),
+  });
+  return parseResponse(response);
+}
+
+export async function endSession(sessionId) {
+  const response = await fetch(`/api/sessions/${sessionId}/end`, {
+    method: "POST",
+  });
+  return parseResponse(response);
+}
+
