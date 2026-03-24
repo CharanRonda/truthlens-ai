@@ -1,47 +1,46 @@
-const jsonHeaders = {
-  "Content-Type": "application/json",
-};
+// 🔗 UPDATED: backend URL
+const BASE_URL = "https://truthlens-backend.onrender.com/api";
 
-async function parseResponse(response) {
+// Helper function (unchanged)
+async function request(endpoint, options = {}) {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    ...options,
+  });
+
   if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Request failed");
+    const errorText = await response.text();
+    throw new Error(errorText || "API request failed");
   }
+
   return response.json();
 }
 
-export async function fetchDashboard() {
-  const response = await fetch("/api/dashboard");
-  return parseResponse(response);
-}
-
+// Start session (unchanged)
 export async function startSession(candidateName) {
-  const response = await fetch("/api/sessions/start", {
+  return request("/sessions/start", {
     method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify({ candidate_name: candidateName }),
+    body: JSON.stringify({
+      candidate_name: candidateName,
+    }),
   });
-  return parseResponse(response);
 }
 
+// Get snapshot (unchanged)
 export async function fetchSnapshot(sessionId) {
-  const response = await fetch(`/api/sessions/${sessionId}/snapshot`);
-  return parseResponse(response);
+  return request(`/sessions/${sessionId}/snapshot`);
 }
 
-export async function updateEnvironment(sessionId, payload) {
-  const response = await fetch(`/api/sessions/${sessionId}/environment`, {
-    method: "POST",
-    headers: jsonHeaders,
-    body: JSON.stringify(payload),
-  });
-  return parseResponse(response);
-}
-
+// End session (unchanged)
 export async function endSession(sessionId) {
-  const response = await fetch(`/api/sessions/${sessionId}/end`, {
+  return request(`/sessions/${sessionId}/end`, {
     method: "POST",
   });
-  return parseResponse(response);
 }
 
+// Dashboard (unchanged)
+export async function fetchDashboard() {
+  return request("/dashboard");
+}
