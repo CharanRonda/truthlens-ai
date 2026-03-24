@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 
 from .engine import SessionEngine
 from .models import DashboardResponse, EndSessionResponse, EnvironmentUpdateRequest, SnapshotResponse, StartSessionRequest, StartSessionResponse
@@ -17,6 +20,20 @@ app.add_middleware(
 )
 
 engine = SessionEngine()
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+FRONTEND_INDEX = FRONTEND_DIST / "index.html"
+
+
+def _frontend_response(path: str = "") -> FileResponse:
+    if not FRONTEND_INDEX.exists():
+        raise HTTPException(status_code=404, detail="Frontend build not found.")
+
+    if path:
+        candidate = (FRONTEND_DIST / path).resolve()
+        if candidate.is_file() and (candidate == FRONTEND_DIST.resolve() or FRONTEND_DIST.resolve() in candidate.parents):
+            return FileResponse(candidate)
+
+    return FileResponse(FRONTEND_INDEX)
 
 
 @app.get("/api/health")
@@ -63,3 +80,15 @@ def finish_session(session_id: str) -> EndSessionResponse:
         return engine.end_session(session_id)
     except KeyError as error:
         raise HTTPException(status_code=404, detail="Session not found.") from error
+
+
+@app.get("/", include_in_schema=False)
+def serve_frontend_root() -> FileResponse:
+    return _frontend_response()
+
+
+@app.get("/{full_path:path}", include_in_schema=False)
+def serve_frontend_asset(full_path: str) -> FileResponse:
+    if full_path.startswith("api/"):
+        raise HTTPException(status_code=404, detail="Not found.")
+    return _frontend_response(full_path)

@@ -2,6 +2,12 @@ const jsonHeaders = {
   "Content-Type": "application/json",
 };
 
+const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/$/, "");
+
+function apiUrl(path) {
+  return `${API_BASE}${path}`;
+}
+
 async function parseResponse(response) {
   if (!response.ok) {
     const text = await response.text();
@@ -11,12 +17,12 @@ async function parseResponse(response) {
 }
 
 export async function fetchDashboard() {
-  const response = await fetch("/api/dashboard");
+  const response = await fetch(apiUrl("/api/dashboard"));
   return parseResponse(response);
 }
 
 export async function startSession(candidateName) {
-  const response = await fetch("/api/sessions/start", {
+  const response = await fetch(apiUrl("/api/sessions/start"), {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify({ candidate_name: candidateName }),
@@ -25,12 +31,12 @@ export async function startSession(candidateName) {
 }
 
 export async function fetchSnapshot(sessionId) {
-  const response = await fetch(`/api/sessions/${sessionId}/snapshot`);
+  const response = await fetch(apiUrl(`/api/sessions/${sessionId}/snapshot`));
   return parseResponse(response);
 }
 
 export async function updateEnvironment(sessionId, payload) {
-  const response = await fetch(`/api/sessions/${sessionId}/environment`, {
+  const response = await fetch(apiUrl(`/api/sessions/${sessionId}/environment`), {
     method: "POST",
     headers: jsonHeaders,
     body: JSON.stringify(payload),
@@ -39,9 +45,8 @@ export async function updateEnvironment(sessionId, payload) {
 }
 
 export async function endSession(sessionId) {
-  const response = await fetch(`/api/sessions/${sessionId}/end`, {
+  const response = await fetch(apiUrl(`/api/sessions/${sessionId}/end`), {
     method: "POST",
   });
   return parseResponse(response);
 }
-
